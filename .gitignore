@@ -1,0 +1,5 @@
+# IntelliJ related stuff
+/.idea
+RNP-02.iml
+/out
+/build
