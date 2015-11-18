@@ -14,8 +14,12 @@ public class Main {
     public static void main(String[] args) {
 
          /* Test: Erzeuge Client und starte ihn. */
-        String host = args[0];
-        int port = Integer.parseInt(args[1]);
+//        String host = args[0];
+//        int port = Integer.parseInt(args[1]);
+
+        String host = "192.168.1.7";
+        int port = 8888;
+
 
         /*GUI starten*/
         Werkzeug ui = null;
