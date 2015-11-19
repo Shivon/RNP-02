@@ -14,8 +14,8 @@ public class Main {
     public static void main(String[] args) {
 
          /* Test: Erzeuge Client und starte ihn. */
-       String host = args[0];
-       int port = Integer.parseInt(args[1]);
+        String host = args[0];
+        int port = Integer.parseInt(args[1]);
 
         /*GUI starten*/
         Werkzeug ui = null;
@@ -27,10 +27,5 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
-
-
     }
 }

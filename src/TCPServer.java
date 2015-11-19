@@ -144,8 +144,8 @@ class TCPWorkerThread extends Thread {
             /* Test, ob Arbeitsthread beendet werden soll */
                 if (sentence.startsWith("/quit")) {
                     workerServiceRequested = false;
-
                     writeToAllClients(" left chatroom.");
+                    clientList.remove(socket);
                 }
                 else{
                     writeToAllClients(": " + sentence);

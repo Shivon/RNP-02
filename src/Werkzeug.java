@@ -13,7 +13,7 @@ public class Werkzeug {
     private GUI _gui;
     private String _sentence;
     private  Socket _socket;
-    private boolean messageSend = false;
+//    private boolean messageSend = false;
     private DataOutputStream outToServer;
 
     public Werkzeug(Socket socket) throws IOException {
@@ -43,7 +43,7 @@ public class Werkzeug {
                     /*Textfeld leeren*/
                     _gui.getWritingField().setText("");
 
-                    messageSend = true;
+//                    messageSend = true;
                 } else {
                     JOptionPane.showMessageDialog(null, "keine Nachricht eingegeben", "Keine Nachricht eingegeben",
                             JOptionPane.ERROR_MESSAGE);
@@ -51,19 +51,19 @@ public class Werkzeug {
             }
         });
     }
-
-    public Boolean registeredMessageSend(){
-        System.out.println(messageSend);
-        return messageSend;
-    }
-
-    public String getUserInput(){
-
-                    /*Textfeld leeren*/
-        _gui.getWritingField().setText("");
-        System.out.println(_sentence);
-        return _sentence;
-    }
+//
+//    public Boolean registeredMessageSend(){
+//        System.out.println(messageSend);
+//        return messageSend;
+//    }
+//
+//    public String getUserInput(){
+//
+//                    /*Textfeld leeren*/
+//        _gui.getWritingField().setText("");
+//        System.out.println(_sentence);
+//        return _sentence;
+//    }
 
     public void writeInChatArea(String message){
         System.out.println(message);
@@ -71,11 +71,11 @@ public class Werkzeug {
 
     }
 
-    public void writeInTextArea(String message){
-        _gui.getWritingField().setText(message);
-        _gui.getWritingField().setCaretPosition(_gui.getWritingField().getText().length());
-        _gui.getWritingField().getCaret().setVisible(true);
-    }
+//    public void writeInTextArea(String message){
+//        _gui.getWritingField().setText(message);
+//        _gui.getWritingField().setCaretPosition(_gui.getWritingField().getText().length());
+//        _gui.getWritingField().getCaret().setVisible(true);
+//    }
 
     private void writeToServer(String request) throws IOException {
         /* Sende eine Zeile (mit CRLF) zum Server */

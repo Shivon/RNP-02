@@ -30,9 +30,15 @@ public class NachrichtenErhaltenThread extends  Thread {
             inFromServer = new BufferedReader(new InputStreamReader(
                     _socket.getInputStream()));
 
-            while (true) {
+            while (!this.isInterrupted()) {
                 sentence = readFromServer();
-                _ui.writeInChatArea(sentence);
+                if(sentence == null) {
+                    this.interrupt();
+                }
+                else{
+                    _ui.writeInChatArea(sentence);
+                    System.out.println("TCP Client got from Server: " + sentence);
+                }
             }
             /* Socket-Streams schliessen --> Verbindungsabbau */
             //_socket.close();
@@ -42,9 +48,9 @@ public class NachrichtenErhaltenThread extends  Thread {
         System.out.println("TCP Client stopped!");
     }
     private String readFromServer() throws IOException {
-        /* Lies die Antwort (reply) vom Server */
+         /* Lies die Antwort (reply) vom Server */
         String reply = inFromServer.readLine();
-        System.out.println("TCP Client got from Server: " + reply);
+
         return reply;
     }
 }
