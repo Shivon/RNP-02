@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,15 +15,16 @@ public class Werkzeug {
 
     private GUI _gui;
     private String _sentence;
-    private String _member;
     private Socket _socket;
     private DataOutputStream outToServer;
+    private boolean loggedIn;
 
     public Werkzeug(Socket socket) throws IOException {
         _gui = new GUI();
         _socket = socket;
         outToServer = new DataOutputStream(_socket.getOutputStream());
         registriereSend();
+        loggedIn = false;
     }
 
     public void registriereSend() {
@@ -35,6 +37,16 @@ public class Werkzeug {
                     /* Text aus Textfeld lesen, an Server senden*/
 
                     _sentence = _gui.getWritingField().getText();
+
+                    if(_sentence.contains("/login")){
+                        loggedIn = true;
+                        _sentence = _sentence.replace("Bitte Usernamen angeben: ", "");
+                        try {
+                            writeToServer(_sentence);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
                     System.out.println("in der GUI" + _sentence);
 
                     try {
@@ -58,17 +70,25 @@ public class Werkzeug {
 
     public void writeInChatArea(String message){
         System.out.println(message);
-        _gui.getChatArea().setText(_gui.getChatArea().getText()+ '\r' + '\n'+ message);
-
+        if(loggedIn) {
+            _gui.getChatArea().setText(_gui.getChatArea().getText() + '\r' + '\n' + message);
+        }
     }
 
     private void writeToServer(String request) throws IOException {
         /* Sende eine Zeile (mit CRLF) zum Server */
-        outToServer.writeBytes(request + '\r' + '\n');
+//        outToServer.writeBytes(request + '\r' + '\n');
+        outToServer.write((request + '\r' + '\n').getBytes(Charset.forName("UTF-8")));
         System.out.println("TCP Client has sent the message: " + request);
     }
 
     public void writeInMemberField(String member) throws IOException{
-        _gui.getMemberField().setText(_gui.getMemberField().getText()+ '\r' + '\n' + member);
+        _gui.getMemberField().setText(member);
+    }
+
+    public void writeInWritingField(String message){
+
+        _gui.getWritingField().setText(message);
+        _gui.getWritingField().setCaretPosition(message.length());
     }
 }
