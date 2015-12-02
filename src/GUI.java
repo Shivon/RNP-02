@@ -12,6 +12,7 @@ public class GUI {
     private JPanel _writingPanel;
     private JTextArea _writingField;
     private JTextArea _chatArea;
+    private JTextArea _memberField;
     private JScrollPane _chatPane;
     private JButton _send;
     private JPanel _buttonPanel;
@@ -22,15 +23,15 @@ public class GUI {
         _writingPanel = new JPanel();
         _writingField = new JTextArea();
         _chatArea = new JTextArea();
+        _memberField = new JTextArea();
         _chatPane = new JScrollPane(_chatArea);
         _send = new JButton("send");
         _buttonPanel = new JPanel();
 
-
         _chatPanel.setBorder(new EmptyBorder(2, 3, 2, 3));
         _chatPanel.setPreferredSize(new Dimension(400,300));
         _writingPanel.setBorder(new EmptyBorder(2,3,2,3));
-        _writingPanel.setPreferredSize(new Dimension(400, 200));
+        _writingPanel.setPreferredSize(new Dimension(550, 200));
         _buttonPanel.setBorder(new EmptyBorder(2,3,2,3));
 
         _chatPane.setPreferredSize(new Dimension(400,300));
@@ -42,7 +43,15 @@ public class GUI {
         _chatArea.setEnabled(false);
         _chatPanel.add(_chatPane, BorderLayout.CENTER);
 
-        _writingField.setPreferredSize(new Dimension(400,200));
+        _memberField.setPreferredSize(new Dimension(100,300));
+        _memberField.setBackground(Color.BLUE);
+        _memberField.setForeground(Color.YELLOW);
+        _memberField.setWrapStyleWord(true);
+        _memberField.setLineWrap(true);
+        _memberField.setEnabled(false);
+        _chatPanel.add(_memberField, BorderLayout.CENTER);
+
+        _writingField.setPreferredSize(new Dimension(500,200));
         _writingField.setBackground(Color.CYAN);
         _writingField.setWrapStyleWord(true);
         _writingField.setLineWrap(true);
@@ -50,7 +59,7 @@ public class GUI {
 
         _buttonPanel.add(_send);
 
-        _frame.setSize(450,600);
+        _frame.setSize(550,600);
 
         _frame.add(_chatPanel, BorderLayout.NORTH);
         _frame.add(_writingPanel, BorderLayout.CENTER);
@@ -72,6 +81,10 @@ public class GUI {
     public JTextArea getWritingField() {
 
         return _writingField;
+    }
+
+    public JTextArea getMemberField(){
+        return _memberField;
     }
 
 

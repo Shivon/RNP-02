@@ -3,6 +3,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Jana on 15.11.2015.
@@ -14,6 +16,7 @@ public class NachrichtenErhaltenThread extends  Thread {
     private BufferedReader inFromServer;
     private DataOutputStream outToServer;
     private String sentence;
+
 
     public NachrichtenErhaltenThread(Werkzeug ui, Socket socket) {
         super();
@@ -30,15 +33,22 @@ public class NachrichtenErhaltenThread extends  Thread {
             inFromServer = new BufferedReader(new InputStreamReader(
                     _socket.getInputStream()));
 
+
             while (!this.isInterrupted()) {
                 sentence = readFromServer();
                 if(sentence == null) {
                     this.interrupt();
                 }
-                else{
-                    _ui.writeInChatArea(sentence);
-                    System.out.println("TCP Client got from Server: " + sentence);
+                else if(sentence.contains("  entered the chatroom.")){
+                       _ui.writeInChatArea(sentence);
                 }
+                else if (sentence.startsWith("/members")){
+                        _ui.writeInMemberField(sentence.substring(8));
+                }else{
+                        _ui.writeInChatArea(sentence);
+                        System.out.println("TCP Client got from Server: " + sentence);
+                }
+
             }
             /* Socket-Streams schliessen --> Verbindungsabbau */
             //_socket.close();

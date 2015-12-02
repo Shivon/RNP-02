@@ -12,6 +12,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 
@@ -26,8 +28,6 @@ public class TCPServer {
 
     /* Clients*/
     public ArrayList clientList;
-
-    public TCPWorkerThread workerThread;
 
     /* Anzeige, ob der Server-Dienst weiterhin benoetigt wird */
     public boolean serviceRequested = true;
@@ -48,6 +48,7 @@ public class TCPServer {
 
         clientList = new ArrayList();
 
+
         try {
          /* Server-Socket erzeugen */
             welcomeSocket = new ServerSocket(serverPort);
@@ -61,9 +62,11 @@ public class TCPServer {
              * Standard-Socket erzeugen und an connectionSocket zuweisen
              */
 
+
                 connectionSocket = welcomeSocket.accept();
 
                 clientList.add(connectionSocket);
+
 
             /* Neuen Arbeits-Thread erzeugen und die Nummer, den Socket sowie das Serverobjekt uebergeben */
                 (new TCPWorkerThread(++nextThreadNumber, connectionSocket, this, clientList)).start();
@@ -97,11 +100,14 @@ class TCPWorkerThread extends Thread {
     private Socket socket;
     private TCPServer server;
     private ArrayList<Socket> clientList;
+    private ArrayList<String> userNameList;
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
-    private  String chatName;
+    private String chatName;
+    private String members;
     boolean workerServiceRequested = true; // Arbeitsthread beenden?
-    boolean registration = true;
+
+
 
     public TCPWorkerThread(int num, Socket sock, TCPServer server, ArrayList clientList) {
       /* Konstruktor */
@@ -113,7 +119,7 @@ class TCPWorkerThread extends Thread {
 
     public void run() {
         String sentence;
-
+        members = "";
         System.out.println("TCP Worker Thread " + name +
                 " is running until quit is received!");
 
@@ -122,21 +128,13 @@ class TCPWorkerThread extends Thread {
             inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outToClient = new DataOutputStream(socket.getOutputStream());
 
+
             /* in dem Textfeld anzeigen lassen*/
             writeToClient("your chatname: " );
 
-            while (registration) {
-            /* aus dem Textfeld lesen*/
-                chatName = readFromClient();
-
-                System.out.println("chatname beim Server " + chatName);
-
-            /*Info, dass neuer Client im Chatroom an alle Clients (ChatArea)*/
-                writeToAllClients(" entered the chatroom.");
-                    registration = false;
-            }
-
             while (workerServiceRequested) {
+
+
                 /*Eingabe des Clients an alle Clients senden*/
                 sentence = readFromClient();
                 System.out.println("beim Server " + sentence);
@@ -144,11 +142,23 @@ class TCPWorkerThread extends Thread {
             /* Test, ob Arbeitsthread beendet werden soll */
                 if (sentence.startsWith("/quit")) {
                     workerServiceRequested = false;
-                    writeToAllClients(" left chatroom.");
+                    members.replace(chatName, "");
+                    writeToAllClients(chatName + " left chatroom.");
                     clientList.remove(socket);
                 }
+                /* Login, Eingabe des Usernames*/
+                else if(sentence.startsWith("/login")){
+                    chatName = sentence.substring(6);
+                    writeToAllClients("");
+                    writeToAllClients(chatName + "  entered the chatroom.");
+                    writeToAllClients("");
+                    members = chatName + '\r' + '\n' + members;
+                    writeToAllClients("/members" + members);
+
+                }
+                /* Messanges from Client*/
                 else{
-                    writeToAllClients(": " + sentence);
+                    writeToAllClients(chatName + ": " + sentence);
                 }
             }
 
@@ -184,9 +194,9 @@ class TCPWorkerThread extends Thread {
 
        for(Socket client : clientList){
            outToClient = new DataOutputStream(client.getOutputStream());
-           reply = chatName + reply;
            outToClient.writeBytes(reply + '\r' + '\n');
            System.out.println(reply);
        }
     }
+
 }

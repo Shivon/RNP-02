@@ -4,6 +4,8 @@ import java.awt.event.ActionListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Jana on 14.11.2015.
@@ -12,8 +14,8 @@ public class Werkzeug {
 
     private GUI _gui;
     private String _sentence;
-    private  Socket _socket;
-//    private boolean messageSend = false;
+    private String _member;
+    private Socket _socket;
     private DataOutputStream outToServer;
 
     public Werkzeug(Socket socket) throws IOException {
@@ -28,6 +30,7 @@ public class Werkzeug {
 
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 if (!_gui.getWritingField().getText().isEmpty()) {
                     /* Text aus Textfeld lesen, an Server senden*/
 
@@ -36,6 +39,7 @@ public class Werkzeug {
 
                     try {
                         writeToServer(_sentence);
+
                     } catch (IOException e1) {
                         writeInChatArea("FEHLER: konnte nicht abgeschickt werden");
                     }
@@ -43,7 +47,6 @@ public class Werkzeug {
                     /*Textfeld leeren*/
                     _gui.getWritingField().setText("");
 
-//                    messageSend = true;
                 } else {
                     JOptionPane.showMessageDialog(null, "keine Nachricht eingegeben", "Keine Nachricht eingegeben",
                             JOptionPane.ERROR_MESSAGE);
@@ -51,19 +54,7 @@ public class Werkzeug {
             }
         });
     }
-//
-//    public Boolean registeredMessageSend(){
-//        System.out.println(messageSend);
-//        return messageSend;
-//    }
-//
-//    public String getUserInput(){
-//
-//                    /*Textfeld leeren*/
-//        _gui.getWritingField().setText("");
-//        System.out.println(_sentence);
-//        return _sentence;
-//    }
+
 
     public void writeInChatArea(String message){
         System.out.println(message);
@@ -71,15 +62,13 @@ public class Werkzeug {
 
     }
 
-//    public void writeInTextArea(String message){
-//        _gui.getWritingField().setText(message);
-//        _gui.getWritingField().setCaretPosition(_gui.getWritingField().getText().length());
-//        _gui.getWritingField().getCaret().setVisible(true);
-//    }
-
     private void writeToServer(String request) throws IOException {
         /* Sende eine Zeile (mit CRLF) zum Server */
         outToServer.writeBytes(request + '\r' + '\n');
         System.out.println("TCP Client has sent the message: " + request);
+    }
+
+    public void writeInMemberField(String member) throws IOException{
+        _gui.getMemberField().setText(_gui.getMemberField().getText()+ '\r' + '\n' + member);
     }
 }
