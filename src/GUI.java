@@ -87,5 +87,5 @@ public class GUI {
         return _memberField;
     }
 
-
+    public JFrame get_frame(){ return _frame;}
 }

@@ -33,17 +33,18 @@ public class NachrichtenErhaltenThread extends  Thread {
             inFromServer = new BufferedReader(new InputStreamReader(
                     _socket.getInputStream(),  "UTF-8"));
 
-
             while (!this.isInterrupted()) {
                 sentence = readFromServer();
                 if(sentence == null) {
                     this.interrupt();
                 }
                 else if(sentence.startsWith("/username")) {
+
                     _ui.writeInWritingField("Bitte Usernamen angeben: ");
                 }
-                else if(sentence.contains("  entered the chatroom.")){
-                       _ui.writeInChatArea(sentence);
+                else if(sentence.contains("/enterChatroom")){
+                        sentence = sentence.replace("/enterChatroom", "");
+                       _ui.writeInChatArea(sentence + "  entered the chatroom.");
                 }
                 else if (sentence.startsWith("/members")){
                         _ui.writeInMemberField("");
@@ -58,6 +59,7 @@ public class NachrichtenErhaltenThread extends  Thread {
         } catch (IOException e) {
             System.err.println("Connection aborted by server!");
         }
+        _ui.shutDown();
         System.out.println("TCP Client stopped!");
     }
     private String readFromServer() throws IOException {
