@@ -3,4 +3,4 @@
 RNP-02.iml
 /out
 /build
-/GUI/GUI.class
+/*/*.class
