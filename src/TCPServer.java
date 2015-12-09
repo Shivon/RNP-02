@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 
 
 public class TCPServer {
@@ -131,14 +132,15 @@ class TCPWorkerThread extends Thread {
     private BufferedReader inFromClient;
     private DataOutputStream outToClient;
     private String chatName;
-    private ArrayList _userNames;
+    private ArrayList<String> _userNames;
+    private String _userNamesString;
     boolean workerServiceRequested = true; // Arbeitsthread beenden?
 
 
 
     boolean loggedIn;
 
-    public TCPWorkerThread(int num, Socket sock, TCPServer server, ArrayList userNames) {
+    public TCPWorkerThread(int num, Socket sock, TCPServer server, ArrayList<String> userNames) {
       /* Konstruktor */
         this.name = num;
         this.socket = sock;
@@ -156,60 +158,52 @@ class TCPWorkerThread extends Thread {
         try {
          /* Socket-Basisstreams durch spezielle Streams filtern */
             inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            outToClient = new DataOutputStream(socket.getOutputStream());
-
 
             /* in dem Textfeld anzeigen lassen*/
             writeToClient("/username");
 
             while (workerServiceRequested) {
-
-
                 /*Eingabe des Clients an alle Clients senden*/
                 sentence = readFromClient();
                 System.out.println("beim Server " + sentence);
 
                 if(loggedIn){
-                    if(sentence.contains("/login")){
-                        JOptionPane.showMessageDialog(null, "Bitte erst ausloggen", "Bereits eingelogged",
-                                JOptionPane.ERROR_MESSAGE);
+                    if(sentence.startsWith("/login")){
+                        writeToClient("/alreadyloggedIn");
                     }
                     else if (sentence.startsWith("/quit")){
-//                        writeToClient("/username" );
-                   //     loggedIn = false;
                         server.removeClient(this);
-                        server.writeToAllClients("/members" + _userNames);
-                        server.writeToAllClients(chatName + " left chatroom.");
+                        server.writeToAllClients("/memberLeft" + chatName);
                         workerServiceRequested = false;
                         socket.close();
-
-                    } else {
-                        server.writeToAllClients(chatName + ": " + sentence);
+                    }
+                    else if (sentence.startsWith("/message")){
+                        sentence = sentence.replaceFirst(Pattern.quote("/message"), "");
+                        server.writeToAllClients("/message" + chatName + ": " + sentence);
+                    }
+                    else if (sentence.startsWith("/enterChatroom")){
+                        server.writeToAllClients(sentence);
+                    }
+                    else if (sentence.startsWith("/members")){
+                        server.writeToAllClients("/members" + _userNames);
+                        System.out.println("members " + _userNames);
                     }
                 }
                 else{
-                    if(sentence.contains("/login")){
-                        chatName = sentence.replace("/login", "");
+                    if(sentence.startsWith("/login")){
+                        chatName = sentence.replaceFirst(Pattern.quote("/login"), "");
+                        System.out.println("beim Server " + chatName);
                         if (_userNames.contains(chatName)) {
-                            JOptionPane.showMessageDialog(null, "Username vergeben", "Username bereits veregeben",
-                                    JOptionPane.ERROR_MESSAGE);
+                            writeToClient("/userNameNotAvailable");
                         }
                         else if(chatName.equals("") || chatName.equals(" ")){
-                            JOptionPane.showMessageDialog(null, "Bitte Benutzernamen angeben", "kein Benutzername",
-                                    JOptionPane.ERROR_MESSAGE);
+                            writeToClient("/noUserName");
                         }
                         else {
+                            writeToClient("/SuccessfullLogin" + chatName);
                             loggedIn = true;
-                            server.writeToAllClients(chatName + "/enterChatroom");
-//                            writeToClient(chatName + "/enterChatroom");
                             _userNames.add(chatName);
-                            server.writeToAllClients("/members" + _userNames);
-//                            writeToClient("/members" + _userNames);
                         }
-                    }
-                    else if(!sentence.contains("/login")){
-                        JOptionPane.showMessageDialog(null, "Bitte erst einloggen", "noch nicht eingelogged",
-                                JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -236,6 +230,7 @@ class TCPWorkerThread extends Thread {
 
     protected synchronized void writeToClient(String reply) throws IOException {
       /* Sende den String als Antwortzeile (mit CRLF) zum Client */
+        outToClient = new DataOutputStream(socket.getOutputStream());
         outToClient.write((reply + '\r' + '\n').getBytes(Charset.forName("UTF-8")));
         System.out.println("TCP Worker Thread " + name +
                 " has written the message: " + reply);

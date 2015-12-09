@@ -15,6 +15,8 @@ public class GUI {
     private JTextArea _memberField;
     private JScrollPane _chatPane;
     private JButton _send;
+    private JButton _login;
+    private JButton _logout;
     private JPanel _buttonPanel;
 
     public GUI(){
@@ -26,6 +28,8 @@ public class GUI {
         _memberField = new JTextArea();
         _chatPane = new JScrollPane(_chatArea);
         _send = new JButton("send");
+        _login = new JButton("login");
+        _logout = new JButton("logout");
         _buttonPanel = new JPanel();
 
         _chatPanel.setBorder(new EmptyBorder(2, 3, 2, 3));
@@ -57,13 +61,15 @@ public class GUI {
         _writingField.setLineWrap(true);
         _writingPanel.add(_writingField, BorderLayout.CENTER);
 
-        _buttonPanel.add(_send);
+        _buttonPanel.add(_login, BorderLayout.WEST);
+        _buttonPanel.add(_send, BorderLayout.CENTER);
+        _buttonPanel.add(_logout, BorderLayout.EAST);
 
         _frame.setSize(550,600);
 
         _frame.add(_chatPanel, BorderLayout.NORTH);
         _frame.add(_writingPanel, BorderLayout.CENTER);
-        _frame.add(_send, BorderLayout.PAGE_END);
+        _frame.add(_buttonPanel, BorderLayout.PAGE_END);
 
         _frame.setVisible(true);
         _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -73,6 +79,10 @@ public class GUI {
     public JButton getSend() {
         return _send;
     }
+
+    public JButton getLogin(){ return _login;}
+
+    public JButton getLogout() { return _logout;}
 
     public JTextArea getChatArea() {
         return _chatArea;
