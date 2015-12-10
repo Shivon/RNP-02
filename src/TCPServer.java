@@ -111,10 +111,21 @@ public class TCPServer {
         myServer.startServer();
     }
 
-    public void removeClient(TCPWorkerThread tcpWorkerThread) {
+    public synchronized void removeClient(TCPWorkerThread tcpWorkerThread) {
         clientThreads.remove(tcpWorkerThread);
         userNames.remove(tcpWorkerThread.getChatName());
 
+    }
+
+    public synchronized void addToClientList(TCPWorkerThread tcpWorkerThread){
+        userNames.add(tcpWorkerThread.getChatName());
+    }
+
+    public synchronized boolean alreadyInClientList(TCPWorkerThread tcpWorkerThread){
+        if(userNames.contains(tcpWorkerThread.getChatName())){
+            return true;
+        }
+        return false;
     }
 }
 
@@ -193,7 +204,8 @@ class TCPWorkerThread extends Thread {
                     if(sentence.startsWith("/login")){
                         chatName = sentence.replaceFirst(Pattern.quote("/login"), "");
                         System.out.println("beim Server " + chatName);
-                        if (_userNames.contains(chatName)) {
+                        if(server.alreadyInClientList(this)){
+//                        if (_userNames.contains(chatName)) {
                             writeToClient("/userNameNotAvailable");
                         }
                         else if(chatName.equals("") || chatName.equals(" ")){
@@ -202,7 +214,8 @@ class TCPWorkerThread extends Thread {
                         else {
                             writeToClient("/SuccessfullLogin" + chatName);
                             loggedIn = true;
-                            _userNames.add(chatName);
+                            server.addToClientList(this);
+//                            _userNames.add(chatName);
                         }
                     }
                 }
