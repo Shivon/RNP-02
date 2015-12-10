@@ -10,11 +10,11 @@ public class Server {
     // a unique ID for each connection
     private static int uniqueId;
     // an ArrayList to keep the list of the Client
-    private ArrayList<ClientThread> al;
-    // if I am in a GUI
-    private ServerGUI sg;
+    private ArrayList<ClientThread> clientThreadList;
+    // ServerGUI object which is only set if I am in the server GUI
+    private ServerGUI serverGUI;
     // to display time
-    private SimpleDateFormat sdf;
+    private SimpleDateFormat displayTime;
     // the port number to listen for connection
     private int port;
     // the boolean that will be turned of to stop the server
@@ -29,20 +29,21 @@ public class Server {
         this(port, null);
     }
 
-    public Server(int port, ServerGUI sg) {
-        // GUI or not
-        this.sg = sg;
+    public Server(int port, ServerGUI serverGUI) {
+        // server GUI or not
+        this.serverGUI = serverGUI;
         // the port
         this.port = port;
         // to display hh:mm:ss
-        sdf = new SimpleDateFormat("HH:mm:ss");
+        displayTime = new SimpleDateFormat("HH:mm:ss");
         // ArrayList for the Client list
-        al = new ArrayList<ClientThread>();
+        clientThreadList = new ArrayList<ClientThread>();
     }
+
 
     public void start() {
         keepGoing = true;
-		/* create socket server and wait for connection requests */
+	      // create socket server and wait for connection requests
         try
         {
             // the socket used by the server
@@ -53,24 +54,26 @@ public class Server {
             {
                 // format message saying we are waiting
                 display("Server waiting for Clients on port " + port + ".");
-
-                Socket socket = serverSocket.accept();  	// accept connection
+                // accept connection
+                Socket socket = serverSocket.accept();
                 // if I was asked to stop
                 if(!keepGoing)
                     break;
-                ClientThread t = new ClientThread(socket);  // make a thread of it
-                al.add(t);									// save it in the ArrayList
-                t.start();
+                // make a thread of it
+                ClientThread clientThread = new ClientThread(socket);
+                // save it in the ArrayList
+                clientThreadList.add(clientThread);
+                clientThread.start();
             }
             // I was asked to stop
             try {
                 serverSocket.close();
-                for(int i = 0; i < al.size(); ++i) {
-                    ClientThread tc = al.get(i);
+                for(int i = 0; i < clientThreadList.size(); ++i) {
+                    ClientThread clientThread = clientThreadList.get(i);
                     try {
-                        tc.sInput.close();
-                        tc.sOutput.close();
-                        tc.socket.close();
+                        clientThread.sInput.close();
+                        clientThread.sOutput.close();
+                        clientThread.socket.close();
                     }
                     catch(IOException ioE) {
                         // not much I can do
@@ -83,10 +86,11 @@ public class Server {
         }
         // something went bad
         catch (IOException e) {
-            String msg = sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
+            String msg = displayTime.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
             display(msg);
         }
     }
+
     /*
      * For the GUI to stop the server
      */
@@ -101,49 +105,67 @@ public class Server {
             // nothing I can really do
         }
     }
+
     /*
      * Display an event (not a message) to the console or the GUI
      */
     private void display(String msg) {
-        String time = sdf.format(new Date()) + " " + msg;
-        if(sg == null)
+        String time = displayTime.format(new Date()) + " " + msg;
+        if(serverGUI == null)
             System.out.println(time);
         else
-            sg.appendEvent(time + "\n");
+            serverGUI.appendEvent(time + "\n");
     }
+
     /*
      *  to broadcast a message to all Clients
      */
     private synchronized void broadcast(String message) {
         // add HH:mm:ss and \n to the message
-        String time = sdf.format(new Date());
+        String time = displayTime.format(new Date());
         String messageLf = time + " " + message + "\n";
         // display message on console or GUI
-        if(sg == null)
+        if(serverGUI == null)
             System.out.print(messageLf);
         else
-            sg.appendRoom(messageLf);     // append in the room window
+            serverGUI.appendRoom(messageLf);     // append in the room window
 
         // we loop in reverse order in case we would have to remove a Client
         // because it has disconnected
-        for(int i = al.size(); --i >= 0;) {
-            ClientThread ct = al.get(i);
+        for(int i = clientThreadList.size(); --i >= 0;) {
+            ClientThread ct = clientThreadList.get(i);
             // try to write to the Client if it fails remove it from the list
             if(!ct.writeMsg(messageLf)) {
-                al.remove(i);
+                clientThreadList.remove(i);
                 display("Disconnected Client " + ct.username + " removed from list.");
             }
         }
     }
 
+    // to get a list if all logged in users
+    public synchronized ArrayList<String> getUserList(){
+        ArrayList<String> users = new ArrayList<>();
+        for(int i = clientThreadList.size(); --i >= 0;) {
+            ClientThread ct = clientThreadList.get(i);
+            // try to write to the Client if it fails remove it from the list
+            if(!ct.writeMsg("ping")) {
+                clientThreadList.remove(i);
+                display("Disconnected Client " + ct.username + " removed from list.");
+            } else {
+                users.add(ct.username);
+            }
+        }
+        return users;
+    }
+
     // for a client who logoff using the LOGOUT message
     synchronized void remove(int id) {
         // scan the array list until we found the Id
-        for(int i = 0; i < al.size(); ++i) {
-            ClientThread ct = al.get(i);
+        for(int i = 0; i < clientThreadList.size(); ++i) {
+            ClientThread ct = clientThreadList.get(i);
             // found it
             if(ct.id == id) {
-                al.remove(i);
+                clientThreadList.remove(i);
                 return;
             }
         }
@@ -195,7 +217,7 @@ public class Server {
         // the date I connect
         String date;
 
-        // Constructore
+        // Constructors
         ClientThread(Socket socket) {
             // a unique id
             id = ++uniqueId;
@@ -227,6 +249,9 @@ public class Server {
             // to loop until LOGOUT
             boolean keepGoing = true;
             while(keepGoing) {
+                // TODO: insert userlist here
+                ArrayList<String> userList = getUserList();
+
                 // read a String (which is an object)
                 try {
                     cm = (ChatMessage) sInput.readObject();
@@ -238,7 +263,7 @@ public class Server {
                 catch(ClassNotFoundException e2) {
                     break;
                 }
-                // the messaage part of the ChatMessage
+                // the message part of the ChatMessage
                 String message = cm.getMessage();
 
                 // Switch on the type of message receive
@@ -252,10 +277,10 @@ public class Server {
                         keepGoing = false;
                         break;
                     case ChatMessage.WHOISIN:
-                        writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
-                        // scan al the users connected
-                        for(int i = 0; i < al.size(); ++i) {
-                            ClientThread ct = al.get(i);
+                        writeMsg("List of the users connected at " + displayTime.format(new Date()) + "\n");
+                        // scan clientThreadList the users connected
+                        for(int i = 0; i < clientThreadList.size(); ++i) {
+                            ClientThread ct = clientThreadList.get(i);
                             writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
                         }
                         break;

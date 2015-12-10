@@ -8,12 +8,14 @@ import java.util.*;
 public class Client  {
 
     // for I/O
-    private ObjectInputStream sInput;		// to read from the socket
-    private ObjectOutputStream sOutput;		// to write on the socket
+    // to read from the socket
+    private ObjectInputStream socketInput;
+    // to write on the socket
+    private ObjectOutputStream socketOutput;
     private Socket socket;
 
-    // if I use a GUI or not
-    private ClientGUI cg;
+    // ClientGUI object which is only set if I am in the client GUI
+    private ClientGUI clientGUI;
 
     // the server, the port and the username
     private String server, username;
@@ -32,14 +34,14 @@ public class Client  {
 
     /*
      * Constructor call when used from a GUI
-     * in console mode the ClienGUI parameter is null
+     * in console mode the ClientGUI parameter is null
      */
-    Client(String server, int port, String username, ClientGUI cg) {
+    Client(String server, int port, String username, ClientGUI clientGUI) {
         this.server = server;
         this.port = port;
         this.username = username;
         // save if we are in GUI mode or not
-        this.cg = cg;
+        this.clientGUI = clientGUI;
     }
 
     /*
@@ -52,18 +54,20 @@ public class Client  {
         }
         // if it failed not much I can so
         catch(Exception ec) {
-            display("Error connectiong to server:" + ec);
+            display("Error connecting to server:" + ec);
             return false;
         }
 
         String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
         display(msg);
-	
+
+        // TODO: insert here show username?
+
 		/* Creating both Data Stream */
         try
         {
-            sInput  = new ObjectInputStream(socket.getInputStream());
-            sOutput = new ObjectOutputStream(socket.getOutputStream());
+            socketInput = new ObjectInputStream(socket.getInputStream());
+            socketOutput = new ObjectOutputStream(socket.getOutputStream());
         }
         catch (IOException eIO) {
             display("Exception creating new Input/output Streams: " + eIO);
@@ -76,7 +80,7 @@ public class Client  {
         // will send as a String. All other messages will be ChatMessage objects
         try
         {
-            sOutput.writeObject(username);
+            socketOutput.writeObject(username);
         }
         catch (IOException eIO) {
             display("Exception doing login : " + eIO);
@@ -91,10 +95,10 @@ public class Client  {
      * To send a message to the console or the GUI
      */
     private void display(String msg) {
-        if(cg == null)
+        if(clientGUI == null)
             System.out.println(msg);      // println in console mode
         else
-            cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
+            clientGUI.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
     }
 
     /*
@@ -102,7 +106,7 @@ public class Client  {
      */
     void sendMessage(ChatMessage msg) {
         try {
-            sOutput.writeObject(msg);
+            socketOutput.writeObject(msg);
         }
         catch(IOException e) {
             display("Exception writing to server: " + e);
@@ -115,11 +119,11 @@ public class Client  {
      */
     private void disconnect() {
         try {
-            if(sInput != null) sInput.close();
+            if(socketInput != null) socketInput.close();
         }
         catch(Exception e) {} // not much else I can do
         try {
-            if(sOutput != null) sOutput.close();
+            if(socketOutput != null) socketOutput.close();
         }
         catch(Exception e) {} // not much else I can do
         try{
@@ -128,8 +132,8 @@ public class Client  {
         catch(Exception e) {} // not much else I can do
 
         // inform the GUI
-        if(cg != null)
-            cg.connectionFailed();
+        if(clientGUI != null)
+            clientGUI.connectionFailed();
 
     }
     /*
@@ -223,20 +227,20 @@ public class Client  {
         public void run() {
             while(true) {
                 try {
-                    String msg = (String) sInput.readObject();
+                    String msg = (String) socketInput.readObject();
                     // if console mode print the message and add back the prompt
-                    if(cg == null) {
+                    if(clientGUI == null) {
                         System.out.println(msg);
                         System.out.print("> ");
                     }
                     else {
-                        cg.append(msg);
+                        clientGUI.append(msg);
                     }
                 }
                 catch(IOException e) {
                     display("Server has close the connection: " + e);
-                    if(cg != null)
-                        cg.connectionFailed();
+                    if(clientGUI != null)
+                        clientGUI.connectionFailed();
                     break;
                 }
                 // can't happen with a String object but need the catch anyhow
