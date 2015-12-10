@@ -9,13 +9,10 @@
  *        Maximale Anzahl Worker-Threads begrenzt durch Semaphore
  *  
  */
-import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
 

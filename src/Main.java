@@ -1,9 +1,5 @@
-import com.sun.javafx.collections.ArrayListenerHelper;
-
-import javax.swing.*;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * Created by Jana on 14.11.2015.
