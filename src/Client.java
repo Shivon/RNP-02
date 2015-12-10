@@ -227,14 +227,26 @@ public class Client  {
         public void run() {
             while(true) {
                 try {
-                    String msg = (String) socketInput.readObject();
-                    // if console mode print the message and add back the prompt
-                    if(clientGUI == null) {
-                        System.out.println(msg);
-                        System.out.print("> ");
-                    }
-                    else {
-                        clientGUI.append(msg);
+                    // BROKEN TODO: fix
+                    Object object = socketInput.readObject();
+
+                    if (object instanceof String) {
+                        String msg = (String) socketInput.readObject();
+                        // if console mode print the message and add back the prompt
+                        if(clientGUI == null) {
+                            System.out.println(msg);
+                            System.out.print("> ");
+                        }
+                        else {
+                            clientGUI.append(msg);
+                        }
+                    } else if ((object instanceof ArrayList) && (clientGUI != null)) {
+                        clientGUI.userList((ArrayList<String>) object);
+                    } else if ((object instanceof ArrayList) && (clientGUI == null)) {
+                        System.out.println("User online: \n");
+                        for (String user : (ArrayList<String>) object) {
+                            System.out.println("> " + user.toString() + "\n");
+                        }
                     }
                 }
                 catch(IOException e) {

@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 
 /*
@@ -105,6 +106,13 @@ public class ClientGUI extends JFrame implements ActionListener {
     void append(String str) {
         chatRoom.append(str);
         chatRoom.setCaretPosition(chatRoom.getText().length() - 1);
+    }
+
+    // calledby Client to fill clientList
+    void userList(ArrayList<String> users) {
+        for (String user : users) {
+            clientList.append(user);
+        }
     }
 
     // called by the GUI is the connection failed

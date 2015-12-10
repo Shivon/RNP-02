@@ -142,21 +142,21 @@ public class Server {
         }
     }
 
-    // to get a list if all logged in users
-    public synchronized ArrayList<String> getUserList(){
-        ArrayList<String> users = new ArrayList<>();
-        for(int i = clientThreadList.size(); --i >= 0;) {
-            ClientThread ct = clientThreadList.get(i);
-            // try to write to the Client if it fails remove it from the list
-            if(!ct.writeMsg("ping")) {
-                clientThreadList.remove(i);
-                display("Disconnected Client " + ct.username + " removed from list.");
-            } else {
-                users.add(ct.username);
-            }
-        }
-        return users;
-    }
+//    // to get a list if all logged in users
+//    public synchronized ArrayList<String> getUserList(){
+//        ArrayList<String> users = new ArrayList<>();
+//        for(int i = clientThreadList.size(); --i >= 0;) {
+//            ClientThread ct = clientThreadList.get(i);
+//            // try to write to the Client if it fails remove it from the list
+//            if(!ct.writeMsg("ping")) {
+//                clientThreadList.remove(i);
+//                display("Disconnected Client " + ct.username + " removed from list.");
+//            } else {
+//                users.add(ct.username);
+//            }
+//        }
+//        return users;
+//    }
 
     // for a client who logoff using the LOGOUT message
     synchronized void remove(int id) {
@@ -250,7 +250,7 @@ public class Server {
             boolean keepGoing = true;
             while(keepGoing) {
                 // TODO: insert userlist here
-                ArrayList<String> userList = getUserList();
+                // ArrayList<String> userList = getUserList();
 
                 // read a String (which is an object)
                 try {
@@ -277,13 +277,23 @@ public class Server {
                         keepGoing = false;
                         break;
                     case ChatMessage.WHOISIN:
-                        writeMsg("List of the users connected at " + displayTime.format(new Date()) + "\n");
-                        // scan clientThreadList the users connected
+                        ArrayList<String> users = new ArrayList<>();
+
                         for(int i = 0; i < clientThreadList.size(); ++i) {
                             ClientThread ct = clientThreadList.get(i);
-                            writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
+                            users.add(ct.username.toString());
                         }
+
+                        sendUserList(users);
+
                         break;
+//                        writeMsg("List of the users connected at " + displayTime.format(new Date()) + "\n");
+//                        // scan clientThreadList the users connected
+//                        for(int i = 0; i < clientThreadList.size(); ++i) {
+//                            ClientThread ct = clientThreadList.get(i);
+//                            writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
+//                        }
+//                        break;
                 }
             }
             // remove myself from the arrayList containing the list of the
@@ -321,6 +331,28 @@ public class Server {
             // write the message to the stream
             try {
                 sOutput.writeObject(msg);
+            }
+            // if an error occurs, do not abort just inform the user
+            catch(IOException e) {
+                display("Error sending message to " + username);
+                display(e.toString());
+            }
+            return true;
+        }
+
+        /*
+         * Write an ArrayString<> to the Client output stream
+         */
+        private boolean sendUserList(ArrayList users) {
+            // if Client is still connected send the message to it
+            if(!socket.isConnected()) {
+                close();
+                return false;
+            }
+
+            // write the message to the stream
+            try {
+                sOutput.writeObject(users);
             }
             // if an error occurs, do not abort just inform the user
             catch(IOException e) {
