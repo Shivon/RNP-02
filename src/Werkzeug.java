@@ -125,8 +125,11 @@ public class Werkzeug {
         System.out.println("TCP Client has sent the message: " + request);
     }
 
-    public void writeInMemberField(String member) throws IOException{
-        _gui.getMemberField().setText(member);
+    public void writeInMemberField(String members) throws IOException{
+	members = members.replaceAll(Pattern.quote(", "), "\n");
+	members = members.replaceAll(Pattern.quote("["), "");
+	members = members.replaceAll(Pattern.quote("]"), "");
+        _gui.getMemberField().setText(members);
     }
 
     public void writeInWritingField(String message){
